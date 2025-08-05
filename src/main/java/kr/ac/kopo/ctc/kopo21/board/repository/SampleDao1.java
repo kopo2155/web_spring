@@ -1,9 +1,8 @@
-package kr.ac.kopo.ctc.kopo21.board;
+package kr.ac.kopo.ctc.kopo21.board.repository;
 
 import kr.ac.kopo.ctc.kopo21.board.domain.Sample;
 import org.springframework.stereotype.Repository;
 
-import javax.xml.transform.Result;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

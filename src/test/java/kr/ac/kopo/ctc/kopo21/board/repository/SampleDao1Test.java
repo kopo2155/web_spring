@@ -1,6 +1,5 @@
 package kr.ac.kopo.ctc.kopo21.board.repository;
 
-import kr.ac.kopo.ctc.kopo21.board.SampleDao1;
 import kr.ac.kopo.ctc.kopo21.board.domain.Sample;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
