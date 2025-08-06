@@ -21,4 +21,8 @@ public class Child {
     public void setParent(Parent parent) {
         this.parent = parent;
     }
+
+    public Parent getParent() {
+        return this.parent;
+    }
 }

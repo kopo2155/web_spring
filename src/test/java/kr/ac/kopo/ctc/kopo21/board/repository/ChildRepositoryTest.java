@@ -32,8 +32,11 @@ public class ChildRepositoryTest {
         }
     }*/
     @Test
-    public void findAll() {
-        List<Child> children = childRepository.findAll();
+    public void fetchAll() {
+        List<Child> children = childRepository.fetchAll();
+        for (Child c : children) {
+            c.getParent().getName();
+        }
 
     }
     }
