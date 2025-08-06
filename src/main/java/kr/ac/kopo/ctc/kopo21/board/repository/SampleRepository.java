@@ -12,6 +12,8 @@ import java.util.List;
 public interface SampleRepository extends JpaRepository<Sample, Long>, JpaSpecificationExecutor<Sample> {
     List<Sample> findByTitle(String title);
     List<Sample> findByTitleLike(String title);
+
+    //2) jpql
     @Query("SELECT s FROM Sample s WHERE s.title LIKE %:title%")
     List<Sample> findByTitleLikes(@Param("title") String title);
 
