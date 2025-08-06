@@ -40,4 +40,14 @@ public class SampleRepositoryTest {
             System.out.println(s.getTitle());
         }
     }
+
+    @Test
+    void findByTitleLikes() {
+        List<Sample> page = sampleRepository.findByTitleLikes("%t1%");
+
+        for (Sample s : page) {
+            System.out.println(s.getTitle());
+        }
+
+    }
 }
