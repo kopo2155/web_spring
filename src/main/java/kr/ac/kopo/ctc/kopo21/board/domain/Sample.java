@@ -14,6 +14,7 @@ public class Sample {
 
     private  String title;
 
+
     public Long getId() {
         return id;
 
@@ -32,4 +33,12 @@ public class Sample {
         this.title = title;
     }
 
+
+    public Sample() {
+    }
+
+    public Sample(Long id, String title) {
+        this.id = id;
+        this.title = title;
+    }
 }
