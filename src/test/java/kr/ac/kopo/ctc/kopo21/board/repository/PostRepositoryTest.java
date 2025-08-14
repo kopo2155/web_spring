@@ -24,22 +24,22 @@ public class PostRepositoryTest {
     UserRepository userRepository;
 
 
-    @Test
-    public void before() {
-
-        for (int i = 1; i <= 5; i++) {
-            User user = new User();
-            user.setUserId("user" + i);
-            userRepository.save(user);
-
-            Post post = new Post();
-            post.setTitle("post" + i);
-            post.setUser(user);
-            postRepository.save(post);
-        }
-
-
-    }
+//    @Test
+//    public void before() {
+//
+//        for (int i = 1; i <= 5; i++) {
+//            User user = new User();
+//            user.setUserId("user" + i);
+//            userRepository.save(user);
+//
+//            Post post = new Post();
+//            post.setTitle("post" + i);
+//            post.setUser(user);
+//            postRepository.save(post);
+//        }
+//
+//
+//    }
 
     @Test
     void findAllByTitle(){

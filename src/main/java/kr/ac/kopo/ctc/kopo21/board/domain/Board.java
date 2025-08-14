@@ -20,4 +20,7 @@ public class Board {
         return this.boardTitle;
     }
 
+    public Long getId() { return id; }
+
+
 }

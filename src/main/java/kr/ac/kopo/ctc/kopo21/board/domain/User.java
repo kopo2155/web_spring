@@ -9,17 +9,45 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private String userId;
+    private String username;
 
     private String password;
 
+    private String name;
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    private String roles;
+
+    public Long getId() { return id; }
+
+    public void setUsername(String username) {
+        this.username = username;
 
     }
-    public String getUserId() {
-        return this.userId;
+    public String getUsername() {
+        return this.username;
     }
+    public void setPassword(String password) {
+        this.password = password;
+
+    }
+    public String getPassword() {
+        return this.password;
+    }
+    public void setRoles(String roles) {
+        this.roles = roles;
+
+    }
+    public String getRoles() {
+        return this.roles;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+
+    }
+    public String getName() {
+        return this.name;
+    }
+
+
 }

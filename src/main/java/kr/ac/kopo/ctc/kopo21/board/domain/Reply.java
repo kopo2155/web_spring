@@ -22,6 +22,7 @@ public class Reply {
 
     private String replyContent;
 
+
     public void setPostUserID(Post postUserId) {
         this.postUserId = postUserId;
     }
@@ -47,4 +48,6 @@ public class Reply {
     }
 
 
+    public Long getReplyId() {return this.replyId;
+    }
 }
