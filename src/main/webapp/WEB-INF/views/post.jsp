@@ -39,8 +39,8 @@
                 <span>
                     작성자:
                     <c:choose>
-                        <c:when test="${post.user.id != null && not empty post.user.id}">
-                            <c:out value="${post.user.id}"/>
+                        <c:when test="${post.user.username != null && not empty post.user.username}">
+                            <c:out value="${post.user.username}"/>
                         </c:when>
                         <c:otherwise>-</c:otherwise>
                     </c:choose>
@@ -65,6 +65,8 @@
 
             <div class="actions">
                 <a class="btn" href="${pageContext.request.contextPath}/board">목록</a>
+                <c:if test="${canEdit}">
+
                 <a class="btn" href="${pageContext.request.contextPath}/post/${post.postId}/edit">수정</a>
 
                 <form action="${pageContext.request.contextPath}/post/${post.postId}/delete" method="post">
@@ -73,6 +75,8 @@
                     </c:if>
                     <button type="submit" class="btn">삭제</button>
                 </form>
+                </c:if>
+
             </div>
         </c:when>
         <c:otherwise>
@@ -87,34 +91,36 @@
 
     <!-- 댓글 목록 -->
     <c:forEach var="r" items="${replies}">
-        <div class="reply">
+        <div class="reply" >
             <div class="reply-meta">작성자 ID: <c:out value="${r.userId}"/></div>
             <pre style="margin:6px 0 0; white-space:pre-wrap;"><c:out value="${r.replyContent}"/></pre>
 
-            <c:if test="${pageContext.request.userPrincipal ne null}">
-                <button type="button" class="btn" onclick="toggleEdit(${r.replyId})">수정</button>
+<c:if test="${pageContext.request.isUserInRole('ROLE_ADMIN') or r.userId == loginUserId}">
+  <button type="button" class="btn" onclick="toggleEdit(${r.replyId})">수정</button>
 
-                <form method="post"
-                      action="${pageContext.request.contextPath}/reply/${r.replyId}/delete"
-                      style="display:inline" onsubmit="return confirm('삭제하시겠습니까?');">
-                    <c:if test="${not empty _csrf}">
-                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                    </c:if>
-                    <button type="submit" class="btn">삭제</button>
-                </form>
+  <form method="post"
+        action="${pageContext.request.contextPath}/reply/${r.replyId}/delete"
+        style="display:inline" onsubmit="return confirm('삭제하시겠습니까?');">
+    <c:if test="${not empty _csrf}">
+      <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+    </c:if>
+    <button type="submit" class="btn">삭제</button>
+  </form>
 
-                <!-- 인라인 수정 폼 (초기 숨김) -->
-                <div id="edit-${r.replyId}" style="display:none; margin-top:8px;">
-                    <form method="post" action="${pageContext.request.contextPath}/reply/${r.replyId}/edit">
-                        <textarea name="replyContent" rows="3"><c:out value="${r.replyContent}"/></textarea>
-                        <c:if test="${not empty _csrf}">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                        </c:if>
-                        <button type="submit" class="btn">저장</button>
-                        <button type="button" class="btn" onclick="toggleEdit(${r.replyId})">취소</button>
-                    </form>
-                </div>
-            </c:if>
+  <!-- 인라인 수정 폼 -->
+  <div id="edit-${r.replyId}" style="display:none; margin-top:8px;">
+    <form method="post" action="${pageContext.request.contextPath}/reply/${r.replyId}/edit">
+      <textarea name="replyContent" rows="3" maxlength="255" ><c:out value="${r.replyContent}"/></textarea>
+          <div class="muted"><span class="count">0 / 255</span></div>
+
+      <c:if test="${not empty _csrf}">
+        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+      </c:if>
+      <button type="submit" class="btn">저장</button>
+      <button type="button" class="btn" onclick="toggleEdit(${r.replyId})">취소</button>
+    </form>
+  </div>
+</c:if>
         </div>
     </c:forEach>
 
@@ -122,7 +128,9 @@
     <c:choose>
         <c:when test="${pageContext.request.userPrincipal ne null}">
             <form method="post" action="${pageContext.request.contextPath}/post/${post.postId}/reply" style="margin-top:12px;">
-                <textarea name="replyContent" rows="3" placeholder="댓글을 입력하세요"></textarea>
+                <textarea name="replyContent" rows="3" maxlength="255" placeholder="댓글을 입력하세요"></textarea>
+                  <div class="muted"><span class="count">0 / 255</span></div>
+
                 <c:if test="${not empty _csrf}">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 </c:if>
@@ -138,8 +146,19 @@
 
 <!-- 수정 폼 토글 스크립트 -->
 <script>
-  function toggleEdit(id) {
-    var el = document.getElementById('edit-' + id);
+  document.querySelectorAll('textarea[name="replyContent"]').forEach(function(ta){
+    const limit = parseInt(ta.getAttribute('maxlength') || '255', 10);
+    const counter = ta.parentElement.querySelector('.count');
+    function enforce(){
+      if (ta.value.length > limit) ta.value = ta.value.slice(0, limit);
+      if (counter) counter.textContent = ta.value.length + ' / ' + limit;
+    }
+    ta.addEventListener('input', enforce);
+    enforce();
+  });
+
+  function toggleEdit(id){
+    const el = document.getElementById('edit-' + id);
     if (!el) return;
     el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
   }

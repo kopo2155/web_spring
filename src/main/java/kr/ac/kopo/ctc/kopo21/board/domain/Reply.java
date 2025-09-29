@@ -1,6 +1,7 @@
 package kr.ac.kopo.ctc.kopo21.board.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 
 @Entity
 
@@ -19,8 +20,9 @@ public class Reply {
     @JoinColumn(name = "replyUserId")
     private User user;
 
-
+    @Size(max = 255)
     private String replyContent;
+
 
 
     public void setPostUserID(Post postUserId) {

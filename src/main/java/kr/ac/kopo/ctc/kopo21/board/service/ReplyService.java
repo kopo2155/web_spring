@@ -43,7 +43,10 @@ public class ReplyService {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("작성자(userId)가 유효하지 않습니다."));
 
-        Reply reply = dto.toEntity(post, user);
+        Reply reply = new Reply();
+        reply.setPostUserID(post);           // ✅ 반드시 설정
+        reply.setUser(user);           // ✅ 반드시 설정
+        reply.setReplyContent(dto.getReplyContent());
         Reply saved = replyRepository.save(reply);
         return ReplyDto.fromEntity(saved);
     }
@@ -88,6 +91,14 @@ public class ReplyService {
         replyRepository.delete(saved);
         return ReplyDto.fromEntity(saved);
     }
+    @Transactional
+    public void deletePost(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글 없음"));
+        postRepository.delete(post); // 엔티티 remove → 자식 먼저 삭제됨
+    }
+
+
 }
 
 

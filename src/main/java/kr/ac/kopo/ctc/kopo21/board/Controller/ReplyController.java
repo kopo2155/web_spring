@@ -10,7 +10,9 @@ import kr.ac.kopo.ctc.kopo21.board.service.ReplyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +24,26 @@ import java.util.List;
 @Controller
 @RequiredArgsConstructor
 public class ReplyController {
+
     private final ReplyService replyService;
     private final UserRepository userRepository;
     private final ReplyRepository replyRepository;
+
+    private boolean isAdmin(Authentication auth) {
+        return auth != null && auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_ADMIN"::equals);
+    }
+    private boolean isOwner(Reply reply, String username) {
+        return reply.getUser() != null
+                && reply.getUser().getUsername() != null
+                && reply.getUser().getUsername().equals(username);
+    }
+    private void enforceReplyOwnerOrAdmin(Reply reply, String username, Authentication auth) {
+        if (!(isAdmin(auth) || isOwner(reply, username))) {
+            throw new AccessDeniedException("본인 댓글만 수정/삭제할 수 있습니다.");
+        }
+    }
 
     /** 댓글 목록 (JSON) */
     @GetMapping(value = "/post/{postId}/replies", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -33,49 +52,42 @@ public class ReplyController {
         return replyService.listByPost(postId);
     }
 
-    /** 댓글 생성 (JSP 폼: userId, replyContent 전송) */
+    /** 댓글 생성 */
     @PostMapping("/post/{postId}/reply")
     @Transactional
     public String createReply(@PathVariable Long postId,
-                              @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails principal,
+                              @AuthenticationPrincipal(expression = "username") String username,
                               @RequestParam String replyContent,
                               RedirectAttributes rttr) {
-        if (principal == null) {
+
+        if (username == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
-        // username → User 엔티티 조회 (필드명에 맞게)
-        User user = userRepository.findByUsername(principal.getUsername())
+        User me = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
-        ReplyDto dto = new ReplyDto(null, postId, user.getId(), replyContent);
+        ReplyDto dto = new ReplyDto(null, postId, me.getId(), replyContent);
         replyService.createReply(postId, dto);
 
         rttr.addFlashAttribute("msg", "댓글이 등록되었습니다.");
         return "redirect:/post/" + postId;
     }
 
-
+    /** 댓글 수정 */
     @PostMapping("/reply/{id}/edit")
     @Transactional
     public String update(@PathVariable Long id,
-                         @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails principal,
+                         @AuthenticationPrincipal(expression = "username") String username,
                          Authentication authentication,
                          @RequestParam("replyContent") String replyContent,
                          RedirectAttributes rttr) {
 
-        if (principal == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (username == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
         Reply target = replyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        User me = userRepository.findByUsername(principal.getUsername())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-
-        boolean owner = target.getUser() != null && target.getUser().getId().equals(me.getId());
-        boolean admin = authentication != null &&
-                authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (!(owner || admin)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "권한 없음");
+        enforceReplyOwnerOrAdmin(target, username, authentication);
 
         ReplyDto patch = new ReplyDto();
         patch.setReplyContent(replyContent);
@@ -89,23 +101,16 @@ public class ReplyController {
     @PostMapping("/reply/{id}/delete")
     @Transactional
     public String delete(@PathVariable Long id,
-                         @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails principal,
+                         @AuthenticationPrincipal(expression = "username") String username,
                          Authentication authentication,
                          RedirectAttributes rttr) {
 
-        if (principal == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (username == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
         Reply target = replyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        User me = userRepository.findByUsername(principal.getUsername())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-
-        boolean owner = target.getUser() != null && target.getUser().getId().equals(me.getId());
-        boolean admin = authentication != null &&
-                authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (!(owner || admin)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "권한 없음");
+        enforceReplyOwnerOrAdmin(target, username, authentication);
 
         ReplyDto deleted = replyService.deleteReply(id);
 

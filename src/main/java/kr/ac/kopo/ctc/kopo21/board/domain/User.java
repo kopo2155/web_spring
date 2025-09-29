@@ -15,7 +15,7 @@ public class User {
 
     private String name;
 
-    private String roles;
+    private String roles = "USER";
 
     public Long getId() { return id; }
 

@@ -1,5 +1,7 @@
 package kr.ac.kopo.ctc.kopo21.board.domain;
 
+import jakarta.validation.constraints.Size;
+
 public class ReplyDto {
     private Long replyId;
 
@@ -7,6 +9,7 @@ public class ReplyDto {
 
     private Long userId;
 
+    @Size(max = 255, message = "댓글은 255자 이내로 입력하세요.")
     private String replyContent;
 
     public ReplyDto() {}
